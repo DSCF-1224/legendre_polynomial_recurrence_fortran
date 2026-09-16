@@ -1,0 +1,9 @@
+#:mute
+
+#:if defined('WITH_REAL128')
+  #:set REAL_KINDS = ['real32', 'real64', 'real128']
+#:else
+  #:set REAL_KINDS = ['real32', 'real64']
+#:endif
+
+#:endmute

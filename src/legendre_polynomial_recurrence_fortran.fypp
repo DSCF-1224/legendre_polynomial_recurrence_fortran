@@ -1,0 +1,505 @@
+#:include 'real_kinds.fypp'
+#:set MODULE_NAME = 'legendre_polynomial_recurrence_fortran'
+module ${MODULE_NAME}$
+
+  #:for REAL_KIND in REAL_KINDS
+  use, intrinsic :: iso_fortran_env, only: ${REAL_KIND}$
+  #:endfor
+
+  use, intrinsic :: ieee_arithmetic, only: ieee_signaling_nan
+  use, intrinsic :: ieee_arithmetic, only: ieee_value
+
+
+
+  implicit none
+
+
+
+  private
+
+  #:for REAL_KIND in REAL_KINDS
+  public :: legendre_polynomial_${REAL_KIND}$_type
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+  public :: legendre_polynomial_with_derivative_${REAL_KIND}$_type
+  #:endfor
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set TYPE_NAME = 'legendre_recurrence_window_' + REAL_KIND + '_type'
+  type :: ${TYPE_NAME}$
+
+    real(${REAL_KIND}$), private :: n_
+    real(${REAL_KIND}$), private :: n_minus_2_
+    real(${REAL_KIND}$), private :: n_minus_1_
+
+    contains
+
+    procedure, pass, private :: next_p_n_${REAL_KIND}$
+    procedure, pass, private :: set_signaling_nan_${REAL_KIND}$
+    procedure, pass, private :: initialize_deg0_${REAL_KIND}$
+    procedure, pass, private :: initialize_deg1_${REAL_KIND}$
+    procedure, pass, private :: shift_${REAL_KIND}$
+
+  end type ${TYPE_NAME}$
+  #:del TYPE_NAME
+
+  #:endfor
+
+
+  #:set TYPE_NAME = 'legendre_polynomial_core_type'
+  type, abstract :: ${TYPE_NAME}$
+
+    integer, private :: degree_ = -1
+
+    contains
+
+    procedure, pass, public  :: evaluate
+    procedure, pass, private :: set_degree
+
+    procedure( evaluate_deg0_core    ), deferred, pass, private :: evaluate_deg0
+    procedure( evaluate_deg1_core    ), deferred, pass, private :: evaluate_deg1
+    procedure( evaluate_invalid_core ), deferred, pass, private :: evaluate_invalid
+    procedure( evaluate_step_core    ), deferred, pass, private :: evaluate_step
+
+    generic, public :: set => set_degree
+
+  end type ${TYPE_NAME}$
+  #:del TYPE_NAME
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set TYPE_NAME = 'legendre_polynomial_base_' + REAL_KIND + '_type'
+  type, abstract, extends(legendre_polynomial_core_type) :: ${TYPE_NAME}$
+
+    real(${REAL_KIND}$), private :: x_
+
+    type(legendre_recurrence_window_${REAL_KIND}$_type), private :: p_
+
+    contains
+
+    procedure, pass, private :: p_n_${REAL_KIND}$
+    procedure, pass, private :: set_x_${REAL_KIND}$
+
+    generic, public  :: p_n => p_n_${REAL_KIND}$
+    generic, public  :: set => set_x_${REAL_KIND}$
+
+  end type ${TYPE_NAME}$
+  #:del TYPE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set TYPE_NAME = 'legendre_polynomial_' + REAL_KIND + '_type'
+  type, extends(legendre_polynomial_base_${REAL_KIND}$_type) :: ${TYPE_NAME}$
+
+    contains
+
+    procedure, pass, private :: evaluate_deg0    => evaluate_deg0_${REAL_KIND}$
+    procedure, pass, private :: evaluate_deg1    => evaluate_deg1_${REAL_KIND}$
+    procedure, pass, private :: evaluate_invalid => evaluate_invalid_${REAL_KIND}$
+    procedure, pass, private :: evaluate_step    => evaluate_step_${REAL_KIND}$
+
+  end type ${TYPE_NAME}$
+  #:del TYPE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set TYPE_NAME = 'legendre_polynomial_with_derivative_' + REAL_KIND + '_type'
+  type, extends(legendre_polynomial_base_${REAL_KIND}$_type) :: ${TYPE_NAME}$
+
+    type(legendre_recurrence_window_${REAL_KIND}$_type), private :: dp_dx_
+
+    contains
+
+    procedure, pass, private :: dp_n_dx_${REAL_KIND}$
+
+    procedure, pass, private :: evaluate_deg0    => evaluate_deg0_with_derivative_${REAL_KIND}$
+    procedure, pass, private :: evaluate_deg1    => evaluate_deg1_with_derivative_${REAL_KIND}$
+    procedure, pass, private :: evaluate_invalid => evaluate_invalid_with_derivative_${REAL_KIND}$
+    procedure, pass, private :: evaluate_step    => evaluate_step_with_derivative_${REAL_KIND}$
+
+    generic, public :: dp_n_dx => dp_n_dx_${REAL_KIND}$
+
+  end type ${TYPE_NAME}$
+  #:del TYPE_NAME
+
+  #:endfor
+
+
+  #:set TYPE_NAME = 'legendre_polynomial_core_type'
+  abstract interface
+
+    #:set SUBROUTINE_NAME = 'evaluate_deg0_core'
+    subroutine ${SUBROUTINE_NAME}$(self)
+
+      import :: ${TYPE_NAME}$
+
+      class(${TYPE_NAME}$), intent(inout) :: self
+
+    end subroutine ${SUBROUTINE_NAME}$
+    #:del SUBROUTINE_NAME
+
+
+    #:set SUBROUTINE_NAME = 'evaluate_deg1_core'
+    subroutine ${SUBROUTINE_NAME}$(self)
+
+      import :: ${TYPE_NAME}$
+
+      class(${TYPE_NAME}$), intent(inout) :: self
+
+    end subroutine ${SUBROUTINE_NAME}$
+    #:del SUBROUTINE_NAME
+
+
+    #:set SUBROUTINE_NAME = 'evaluate_invalid_core'
+    subroutine ${SUBROUTINE_NAME}$(self)
+
+      import :: ${TYPE_NAME}$
+
+      class(${TYPE_NAME}$), intent(inout) :: self
+
+    end subroutine ${SUBROUTINE_NAME}$
+    #:del SUBROUTINE_NAME
+
+
+    #:set SUBROUTINE_NAME = 'evaluate_step_core'
+    subroutine ${SUBROUTINE_NAME}$(self, n)
+
+      import :: ${TYPE_NAME}$
+
+      class(${TYPE_NAME}$), intent(inout) :: self
+
+      integer, intent(in) :: n
+
+    end subroutine ${SUBROUTINE_NAME}$
+    #:del SUBROUTINE_NAME
+
+  end interface
+  #:del TYPE_NAME
+
+
+
+  contains
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set FUNCTION_NAME = 'dp_n_dx_' + REAL_KIND
+  real(${REAL_KIND}$) elemental function ${FUNCTION_NAME}$(self)
+
+    class(legendre_polynomial_with_derivative_${REAL_KIND}$_type), intent(in) :: self
+
+    ${FUNCTION_NAME}$ = self%dp_dx_%n_
+
+  end function ${FUNCTION_NAME}$
+  #:del FUNCTION_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set FUNCTION_NAME = 'next_p_n_' + REAL_KIND
+  real(${REAL_KIND}$) pure function ${FUNCTION_NAME}$(self, n, x)
+
+    class(legendre_recurrence_window_${REAL_KIND}$_type), intent(in) :: self
+
+    integer, intent(in) :: n
+
+    real(${REAL_KIND}$), intent(in) :: x
+
+    ${FUNCTION_NAME}$ = ( (2 * n - 1) * self%n_minus_1_ * x - (n - 1) * self%n_minus_2_ ) / n
+
+  end function ${FUNCTION_NAME}$
+  #:del FUNCTION_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set FUNCTION_NAME = 'p_n_' + REAL_KIND
+  real(${REAL_KIND}$) elemental function ${FUNCTION_NAME}$(self)
+
+    class(legendre_polynomial_base_${REAL_KIND}$_type), intent(in) :: self
+
+    ${FUNCTION_NAME}$ = self%p_%n_
+
+  end function ${FUNCTION_NAME}$
+  #:del FUNCTION_NAME
+
+  #:endfor
+
+
+  #:set SUBROUTINE_NAME = 'evaluate'
+  subroutine ${SUBROUTINE_NAME}$(self)
+
+    class(legendre_polynomial_core_type), intent(inout) :: self
+
+
+    select case(self%degree_)
+
+      case(0); call self%evaluate_deg0()
+
+      case(1:)
+      block
+
+        integer :: n
+
+        call self%evaluate_deg1()
+
+        do n = 2, self%degree_
+          call self%evaluate_step(n)
+        end do
+
+      end block
+
+      case default; call self%evaluate_invalid()
+
+    end select
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'evaluate_deg0_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(self)
+
+    class(legendre_polynomial_${REAL_KIND}$_type), intent(inout) :: self
+
+    call self%p_%initialize_deg0_${REAL_KIND}$()
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'evaluate_deg0_with_derivative_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(self)
+
+    class(legendre_polynomial_with_derivative_${REAL_KIND}$_type), intent(inout) :: self
+
+
+    call self%p_%initialize_deg0_${REAL_KIND}$()
+
+    self%dp_dx_%n_         = 0.0_${REAL_KIND}$
+    self%dp_dx_%n_minus_1_ = ieee_value(self%dp_dx_%n_minus_1_, ieee_signaling_nan)
+    self%dp_dx_%n_minus_2_ = ieee_value(self%dp_dx_%n_minus_2_, ieee_signaling_nan)
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'evaluate_deg1_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(self)
+
+    class(legendre_polynomial_${REAL_KIND}$_type), intent(inout) :: self
+
+    call self%p_%initialize_deg1_${REAL_KIND}$(self%x_)
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'evaluate_deg1_with_derivative_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(self)
+
+    class(legendre_polynomial_with_derivative_${REAL_KIND}$_type), intent(inout) :: self
+
+
+    call self%p_%initialize_deg1_${REAL_KIND}$(self%x_)
+
+    self%dp_dx_%n_         = 1.0_${REAL_KIND}$
+    self%dp_dx_%n_minus_1_ = 0.0_${REAL_KIND}$
+    self%dp_dx_%n_minus_2_ = ieee_value(self%dp_dx_%n_minus_2_, ieee_signaling_nan)
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'evaluate_invalid_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(self)
+
+    class(legendre_polynomial_${REAL_KIND}$_type), intent(inout) :: self
+
+    call self%p_%set_signaling_nan_${REAL_KIND}$()
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'evaluate_invalid_with_derivative_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(self)
+
+    class(legendre_polynomial_with_derivative_${REAL_KIND}$_type), intent(inout) :: self
+
+
+    call self%  p_    %set_signaling_nan_${REAL_KIND}$()
+    call self% dp_dx_ %set_signaling_nan_${REAL_KIND}$()
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'evaluate_step_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(self, n)
+
+    class(legendre_polynomial_${REAL_KIND}$_type), intent(inout) :: self
+
+    integer, intent(in) :: n
+
+
+    call self%p_%shift_${REAL_KIND}$()
+
+    self%p_%n_ = self%p_%next_p_n_${REAL_KIND}$(n = n, x = self%x_)
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'evaluate_step_with_derivative_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(self, n)
+
+    class(legendre_polynomial_with_derivative_${REAL_KIND}$_type), intent(inout) :: self
+
+    integer, intent(in) :: n
+
+
+    call self%p_%shift_${REAL_KIND}$()
+
+    self%p_%n_ = self%p_%next_p_n_${REAL_KIND}$(n = n, x = self%x_)
+
+
+    call self%dp_dx_%shift_${REAL_KIND}$()
+
+    self%dp_dx_%n_ = &
+      (   (2 * n - 1) * (self%dp_dx_%n_minus_1_ * self%x_ + self%p_%n_minus_1_) &
+        - (    n - 1) *  self%dp_dx_%n_minus_2_ ) / n
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'initialize_deg0_' + REAL_KIND
+  elemental subroutine ${SUBROUTINE_NAME}$(self)
+
+    class(legendre_recurrence_window_${REAL_KIND}$_type), intent(inout) :: self
+
+    self%n_         = 1.0_${REAL_KIND}$
+    self%n_minus_1_ = ieee_value(self%n_minus_1_, ieee_signaling_nan)
+    self%n_minus_2_ = ieee_value(self%n_minus_2_, ieee_signaling_nan)
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'initialize_deg1_' + REAL_KIND
+  elemental subroutine ${SUBROUTINE_NAME}$(self, x)
+
+    class(legendre_recurrence_window_${REAL_KIND}$_type), intent(inout) :: self
+
+    real(${REAL_KIND}$), intent(in) :: x
+
+    self%n_         = x
+    self%n_minus_1_ = 1.0_${REAL_KIND}$
+    self%n_minus_2_ = ieee_value(self%n_minus_2_, ieee_signaling_nan)
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+
+  #:set SUBROUTINE_NAME = 'set_degree'
+  subroutine ${SUBROUTINE_NAME}$(self, degree)
+
+    class(legendre_polynomial_core_type), intent(inout) :: self
+
+    integer, intent(in) :: degree
+
+    self%degree_ = degree
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'set_signaling_nan_' + REAL_KIND
+  elemental subroutine ${SUBROUTINE_NAME}$(self)
+
+    class(legendre_recurrence_window_${REAL_KIND}$_type), intent(inout) :: self
+
+    self%n_         = ieee_value( self%n_         , ieee_signaling_nan )
+    self%n_minus_1_ = ieee_value( self%n_minus_1_ , ieee_signaling_nan )
+    self%n_minus_2_ = ieee_value( self%n_minus_2_ , ieee_signaling_nan )
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'set_x_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(self, x)
+
+    class(legendre_polynomial_base_${REAL_KIND}$_type), intent(inout) :: self
+
+    real(${REAL_KIND}$), intent(in) :: x
+
+    self%x_ = x
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'shift_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(self)
+
+    class(legendre_recurrence_window_${REAL_KIND}$_type), intent(inout) :: self
+
+    self%n_minus_2_ = self%n_minus_1_
+    self%n_minus_1_ = self%n_
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+end module ${MODULE_NAME}$
