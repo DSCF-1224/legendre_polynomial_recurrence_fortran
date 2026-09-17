@@ -1,0 +1,115 @@
+#:include '../src/real_kinds.fypp'
+#:set PROGRAM_NAME = 'demo_p_n'
+program ${PROGRAM_NAME}$
+
+  #:for REAL_KIND in REAL_KINDS
+  use, intrinsic :: iso_fortran_env, only: ${REAL_KIND}$
+  #:endfor
+
+  use, non_intrinsic :: legendre_polynomial_recurrence_fortran
+
+
+
+  implicit none
+
+
+
+  integer, parameter :: num_intervals = 1024
+
+  integer, parameter, dimension(20) :: list_degree = &!
+    [ &!
+       0,  1,  2,  3,  4,  5,  6,  7,  8,  9, &!
+      10, 11, 22, 33, 44, 55, 66, 77, 88, 99  &!
+    ]
+
+
+  block
+
+    integer :: i
+
+    do i = 1, size(list_degree)
+      #:for REAL_KIND in REAL_KINDS
+      call run_example_${REAL_KIND}$( list_degree(i) )
+      #:endfor
+    end do
+
+  end block
+
+
+
+  contains
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = 'run_example_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(degree)
+
+    integer, intent(in) :: degree
+
+
+    real(${REAL_KIND}$), parameter :: maxval_x = 1.0_${REAL_KIND}$
+
+    real(${REAL_KIND}$), parameter :: minval_x = - maxval_x
+
+    real(${REAL_KIND}$), parameter :: step_x = maxval_x / num_intervals
+
+
+    integer :: file_unit
+
+    integer :: i
+
+    real(${REAL_KIND}$) :: x
+
+    type(legendre_polynomial_${REAL_KIND}$_type) :: lp
+
+    character(64) :: file_name
+
+
+
+    write(file_name, '(A,I2.2,A)') 'example/retval_${REAL_KIND}$_', degree, '.dat'
+
+    open( &!
+      newunit = file_unit       , &!
+      file    = trim(file_name) , &!
+      action  = 'write'         , &!
+      form    = 'formatted'       &!
+    )
+
+
+
+    call lp%set(degree)
+
+
+    call lp%set(minval_x)
+    call lp%evaluate()
+
+    write(file_unit, *) minval_x, lp%p_n()
+
+
+    do i = - (num_intervals - 1), (num_intervals - 1)
+
+      x = step_x * i
+
+      call lp%set(x)
+      call lp%evaluate()
+
+      write(file_unit, *) x, lp%p_n()
+
+    end do
+
+
+    call lp%set(maxval_x)
+    call lp%evaluate()
+
+    write(file_unit, *) maxval_x, lp%p_n()
+
+
+
+    close(file_unit)
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+end program ${PROGRAM_NAME}$
