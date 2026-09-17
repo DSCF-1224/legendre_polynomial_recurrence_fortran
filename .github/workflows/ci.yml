@@ -31,9 +31,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: fortran-lang/setup-fpm@v10
+      - name: Install fpm (x86_64)
+        if: matrix.runner != 'ubuntu-24.04-arm'
+        uses: fortran-lang/setup-fpm@v10
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install fpm (arm64, build from source)
+        if: matrix.runner == 'ubuntu-24.04-arm'
+        run: |
+          git clone --depth 1 --branch v0.13.0 https://github.com/fortran-lang/fpm /tmp/fpm-src
+          cd /tmp/fpm-src
+          ./install.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Install fypp
         run: pip install fypp
