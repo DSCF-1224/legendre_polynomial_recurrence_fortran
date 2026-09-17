@@ -37,13 +37,24 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install fpm (arm64, build from source)
+      - name: Cache fpm binary (arm64)
         if: matrix.runner == 'ubuntu-24.04-arm'
+        id: cache-fpm
+        uses: actions/cache@v6
+        with:
+          path: ~/.local/bin/fpm
+          key: fpm-v0.13.0-${{ matrix.runner }}
+
+      - name: Install fpm (arm64, build from source)
+        if: matrix.runner == 'ubuntu-24.04-arm' && steps.cache-fpm.outputs.cache-hit != 'true'
         run: |
           git clone --depth 1 --branch v0.13.0 https://github.com/fortran-lang/fpm /tmp/fpm-src
           cd /tmp/fpm-src
           ./install.sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Add fpm to PATH (arm64)
+        if: matrix.runner == 'ubuntu-24.04-arm'
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Install fypp
         run: pip install fypp
