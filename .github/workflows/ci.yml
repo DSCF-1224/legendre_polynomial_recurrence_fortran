@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            variant: default
+            fypp_args: ""
+          - runner: ubuntu-latest
+            variant: with_real128
+            fypp_args: "-DWITH_REAL128"
+          - runner: ubuntu-24.04-arm
+            variant: default
+            fypp_args: ""
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: fortran-lang/setup-fpm@v10
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install fypp
+        run: pip install fypp
+
+      - name: Generate source (${{ matrix.variant }})
+        run: |
+          fypp ${{ matrix.fypp_args }} \
+               src/legendre_polynomial_recurrence_fortran.fypp \
+               src/legendre_polynomial_recurrence_fortran.f90
+          fypp ${{ matrix.fypp_args }} \
+               example/demo_p_n.fypp \
+               example/demo_p_n.f90
+
+      - name: Run tests
+        run: fpm test
+
+      - name: Run example
+        run: fpm run --example demo_p_n
