@@ -71,3 +71,4 @@ example/*.*
 
 # fypp-generated source (regenerate with `fypp`)
 src/*.f90
+test/*.f90
