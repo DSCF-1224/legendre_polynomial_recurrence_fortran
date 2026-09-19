@@ -6,6 +6,8 @@ on:
 
 jobs:
   publish-variant:
+    permissions:
+      contents: write
     strategy:
       matrix:
         include:
