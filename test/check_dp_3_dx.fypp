@@ -75,11 +75,11 @@ program ${PROGRAM_NAME}$
 
       if (abs_dp_3_dx_dif > tolerance) then
 
-        write(error_unit, *) 'x           : ', x
+        write(error_unit, *) 'x               : ', x
         write(error_unit, *) 'dp_3_dx     (x) : ', dp_3_dx
         write(error_unit, *) 'dp_3_dx_ref (x) : ', dp_3_dx_ref
-        write(error_unit, *) 'diff        : ', abs_dp_3_dx_dif
-        write(error_unit, *) 'tolerance   : ', tolerance
+        write(error_unit, *) 'diff            : ', abs_dp_3_dx_dif
+        write(error_unit, *) 'tolerance       : ', tolerance
         write(error_unit, *) 'dp_3_dx differs from the reference beyond the tolerance.'
 
         error stop

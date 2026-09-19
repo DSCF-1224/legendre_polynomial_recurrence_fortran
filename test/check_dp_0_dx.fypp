@@ -70,16 +70,20 @@ program ${PROGRAM_NAME}$
 
       if (dp_0_dx < zero_next_before) then
 
-        write(error_unit, *) 'x                : ', x
-        write(error_unit, *) 'zero_next_before : ', zero_next_before
+        write(error_unit, *) 'x                     : ', x
+        write(error_unit, *) 'ieee_next_after  (0)  : ', zero_next_after
+        write(error_unit, *) 'dp_0_dx               : ', dp_0_dx
+        write(error_unit, *) 'ieee_next_before (0)  : ', zero_next_before
         write(error_unit, *) 'dp_0_dx was less than 0.'
 
         error stop
 
       else if (dp_0_dx > zero_next_after) then
 
-        write(error_unit, *) 'zero_next_after : ', zero_next_after
-        write(error_unit, *) 'x               : ', x
+        write(error_unit, *) 'x                     : ', x
+        write(error_unit, *) 'ieee_next_after  (0)  : ', zero_next_after
+        write(error_unit, *) 'dp_0_dx               : ', dp_0_dx
+        write(error_unit, *) 'ieee_next_before (0)  : ', zero_next_before
         write(error_unit, *) 'dp_0_dx was greater than 0.'
 
         error stop

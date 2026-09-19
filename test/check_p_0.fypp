@@ -71,6 +71,8 @@ program ${PROGRAM_NAME}$
       if (p_0 < one_next_before) then
 
         write(error_unit, *) 'x               : ', x
+        write(error_unit, *) 'one_next_after  : ', one_next_after
+        write(error_unit, *) 'p_0             : ', p_0
         write(error_unit, *) 'one_next_before : ', one_next_before
         write(error_unit, *) 'p_0 was less than 1.'
 
@@ -78,8 +80,10 @@ program ${PROGRAM_NAME}$
 
       else if (p_0 > one_next_after) then
 
-        write(error_unit, *) 'one_next_after : ', one_next_after
-        write(error_unit, *) 'x              : ', x
+        write(error_unit, *) 'x               : ', x
+        write(error_unit, *) 'one_next_after  : ', one_next_after
+        write(error_unit, *) 'p_0             : ', p_0
+        write(error_unit, *) 'one_next_before : ', one_next_before
         write(error_unit, *) 'p_0 was greater than 1.'
 
         error stop

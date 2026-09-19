@@ -72,18 +72,20 @@ program ${PROGRAM_NAME}$
 
       if (p_2 < p_2_ref_next_before) then
 
-        write(error_unit, *) 'x           : ', x
-        write(error_unit, *) 'p_2     (x) : ', p_2
-        write(error_unit, *) 'p_2_ref (x) : ', p_2_ref
+        write(error_unit, *) 'x                                : ', x
+        write(error_unit, *) 'ieee_next_after  ( p_2_ref (x) ) : ', p_2_ref_next_after
+        write(error_unit, *) '                   p_2     (x)   : ', p_2
+        write(error_unit, *) 'ieee_next_before ( p_2_ref (x) ) : ', p_2_ref_next_before
         write(error_unit, *) 'p_2 was less than the reference.'
 
         error stop
 
       else if (p_2 > p_2_ref_next_after) then
 
-        write(error_unit, *) 'x           : ', x
-        write(error_unit, *) 'p_2     (x) : ', p_2
-        write(error_unit, *) 'p_2_ref (x) : ', p_2_ref
+        write(error_unit, *) 'x                                : ', x
+        write(error_unit, *) 'ieee_next_after  ( p_2_ref (x) ) : ', p_2_ref_next_after
+        write(error_unit, *) '                   p_2     (x)   : ', p_2
+        write(error_unit, *) 'ieee_next_before ( p_2_ref (x) ) : ', p_2_ref_next_before
         write(error_unit, *) 'p_2 was greater than the reference.'
 
         error stop

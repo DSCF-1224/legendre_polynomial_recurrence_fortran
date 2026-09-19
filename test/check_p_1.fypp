@@ -66,20 +66,20 @@ program ${PROGRAM_NAME}$
 
       if (p_1 < x_next_before) then
 
-        write(error_unit, *) 'x                   : ', x
-        write(error_unit, *) 'ieee_next_after (x) : ', x_next_after
-        write(error_unit, *) 'p_1             (x) : ', p_1
-        write(error_unit, *) 'ieee_next_before(x) : ', x_next_before
+        write(error_unit, *) 'x                    : ', x
+        write(error_unit, *) 'ieee_next_after  (x) : ', x_next_after
+        write(error_unit, *) 'p_1              (x) : ', p_1
+        write(error_unit, *) 'ieee_next_before (x) : ', x_next_before
         write(error_unit, *) 'p_1 was less than x.'
 
         error stop
 
       else if (p_1 > x_next_after) then
 
-        write(error_unit, *) 'x                   : ', x
-        write(error_unit, *) 'ieee_next_after (x) : ', x_next_after
-        write(error_unit, *) 'p_1             (x) : ', p_1
-        write(error_unit, *) 'ieee_next_before(x) : ', x_next_before
+        write(error_unit, *) 'x                    : ', x
+        write(error_unit, *) 'ieee_next_after  (x) : ', x_next_after
+        write(error_unit, *) 'p_1              (x) : ', p_1
+        write(error_unit, *) 'ieee_next_before (x) : ', x_next_before
         write(error_unit, *) 'p_1 was greater than x.'
 
         error stop

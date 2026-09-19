@@ -72,18 +72,20 @@ program ${PROGRAM_NAME}$
 
       if (dp_2_dx < dp_2_dx_ref_next_before) then
 
-        write(error_unit, *) 'x               : ', x
-        write(error_unit, *) 'dp_2_dx     (x) : ', dp_2_dx
-        write(error_unit, *) 'dp_2_dx_ref (x) : ', dp_2_dx_ref
+        write(error_unit, *) 'x                                    : ', x
+        write(error_unit, *) 'ieee_next_after  ( dp_2_dx_ref (x) ) : ', dp_2_dx_ref_next_after
+        write(error_unit, *) '                   dp_2_dx     (x)   : ', dp_2_dx
+        write(error_unit, *) 'ieee_next_before ( dp_2_dx_ref (x) ) : ', dp_2_dx_ref_next_before
         write(error_unit, *) 'dp_2_dx was less than the reference.'
 
         error stop
 
       else if (dp_2_dx > dp_2_dx_ref_next_after) then
 
-        write(error_unit, *) 'x               : ', x
-        write(error_unit, *) 'dp_2_dx     (x) : ', dp_2_dx
-        write(error_unit, *) 'dp_2_dx_ref (x) : ', dp_2_dx_ref
+        write(error_unit, *) 'x                                    : ', x
+        write(error_unit, *) 'ieee_next_after  ( dp_2_dx_ref (x) ) : ', dp_2_dx_ref_next_after
+        write(error_unit, *) '                   dp_2_dx     (x)   : ', dp_2_dx
+        write(error_unit, *) 'ieee_next_before ( dp_2_dx_ref (x) ) : ', dp_2_dx_ref_next_before
         write(error_unit, *) 'dp_2_dx was greater than the reference.'
 
         error stop

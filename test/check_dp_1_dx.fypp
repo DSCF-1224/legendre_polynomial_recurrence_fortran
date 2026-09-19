@@ -70,18 +70,20 @@ program ${PROGRAM_NAME}$
 
       if (dp_1_dx < one_next_before) then
 
-        write(error_unit, *) 'x               : ', x
-        write(error_unit, *) 'dp_1_dx         : ', dp_1_dx
-        write(error_unit, *) 'one_next_before : ', one_next_before
+        write(error_unit, *) 'x                     : ', x
+        write(error_unit, *) 'ieee_next_after  (1)  : ', one_next_after
+        write(error_unit, *) 'dp_1_dx               : ', dp_1_dx
+        write(error_unit, *) 'ieee_next_before (1)  : ', one_next_before
         write(error_unit, *) 'dp_1_dx was less than 1.'
 
         error stop
 
       else if (dp_1_dx > one_next_after) then
 
-        write(error_unit, *) 'x              : ', x
-        write(error_unit, *) 'one_next_after : ', one_next_after
-        write(error_unit, *) 'dp_1_dx        : ', dp_1_dx
+        write(error_unit, *) 'x                     : ', x
+        write(error_unit, *) 'ieee_next_after  (1)  : ', one_next_after
+        write(error_unit, *) 'dp_1_dx               : ', dp_1_dx
+        write(error_unit, *) 'ieee_next_before (1)  : ', one_next_before
         write(error_unit, *) 'dp_1_dx was greater than 1.'
 
         error stop
