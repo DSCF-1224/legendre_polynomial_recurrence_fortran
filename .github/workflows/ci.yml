@@ -67,6 +67,9 @@ jobs:
           fypp ${{ matrix.fypp_args }} \
                example/demo_p_n.fypp \
                example/demo_p_n.f90
+          for f in test/*.fypp; do
+            fypp ${{ matrix.fypp_args }} "$f" "${f%.fypp}.f90"
+          done
 
       - name: Run tests
         run: fpm test
