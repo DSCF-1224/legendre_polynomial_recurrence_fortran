@@ -1,0 +1,115 @@
+#:include '../src/real_kinds.fypp'
+#:set PROGRAM_NAME = 'check_dp_0_dx'
+program ${PROGRAM_NAME}$
+
+  use, intrinsic :: iso_fortran_env, only: error_unit
+  #:for REAL_KIND in REAL_KINDS
+  use, intrinsic :: iso_fortran_env, only: ${REAL_KIND}$
+  #:endfor
+
+  use, intrinsic :: ieee_arithmetic, only: ieee_next_after
+
+  use, non_intrinsic :: legendre_polynomial_recurrence_fortran
+
+
+
+  implicit none
+
+
+
+  integer, parameter :: num_trials = 100
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  call ${PROGRAM_NAME}$_${REAL_KIND}$( &!
+    zero_next_before = ieee_next_after(-0.0_${REAL_KIND}$, -1.0_${REAL_KIND}$) , &!
+    zero_next_after  = ieee_next_after( 0.0_${REAL_KIND}$,  1.0_${REAL_KIND}$)   &!
+  )
+
+  #:endfor
+
+  print *, 'OK: ${PROGRAM_NAME}$'
+
+
+
+  contains
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = PROGRAM_NAME + '_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(zero_next_before, zero_next_after)
+
+    real(${REAL_KIND}$), intent(in) :: zero_next_before, zero_next_after
+
+
+    integer :: i
+
+    real(${REAL_KIND}$) :: dp_0_dx, x
+
+    type(legendre_polynomial_with_derivative_${REAL_KIND}$_type) :: lp
+
+
+    call initialize_prng
+
+    call lp%set(0)
+
+
+    do i = 1, num_trials
+
+      call random_number(x) ! [0, 1)
+
+      x = 2.0_${REAL_KIND}$ * x - 1.0_${REAL_KIND}$ ! [-1, 1)
+
+      call lp%set(x)
+
+      call lp%evaluate()
+
+      dp_0_dx = lp%dp_n_dx()
+
+      if (dp_0_dx < zero_next_before) then
+
+        write(error_unit, *) 'x                : ', x
+        write(error_unit, *) 'zero_next_before : ', zero_next_before
+        write(error_unit, *) 'dp_0_dx was less than 0.'
+
+        error stop
+
+      else if (dp_0_dx > zero_next_after) then
+
+        write(error_unit, *) 'zero_next_after : ', zero_next_after
+        write(error_unit, *) 'x               : ', x
+        write(error_unit, *) 'dp_0_dx was greater than 0.'
+
+        error stop
+
+      end if
+
+    end do
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+
+  subroutine initialize_prng
+
+    integer :: i, seed_size
+
+    integer, allocatable :: seed(:)
+
+    call random_seed(size=seed_size)
+
+    allocate( seed(seed_size) )
+
+    do i = 1, seed_size
+      seed(i) = i
+    end do
+
+    call random_seed( put = seed(:) )
+
+  end subroutine
+
+end program ${PROGRAM_NAME}$
