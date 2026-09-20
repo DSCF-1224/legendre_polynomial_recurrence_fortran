@@ -52,8 +52,8 @@ program ${PROGRAM_NAME}$
 
     call initialize_prng
 
-    ! call lp                 % set(integer)
-    ! call lp_with_derivative % set(integer)
+    ! call lp                 % set(integer) ! unset
+    ! call lp_with_derivative % set(integer) ! unset
 
     do i_x = 1, num_trials
 
