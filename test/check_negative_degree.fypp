@@ -1,0 +1,135 @@
+#:include '../src/real_kinds.fypp'
+#:set PROGRAM_NAME = 'check_negative_degree'
+program ${PROGRAM_NAME}$
+
+  use, intrinsic :: iso_fortran_env, only: error_unit
+  #:for REAL_KIND in REAL_KINDS
+  use, intrinsic :: iso_fortran_env, only: ${REAL_KIND}$
+  #:endfor
+
+  use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+
+  use, non_intrinsic :: legendre_polynomial_recurrence_fortran
+
+
+
+  implicit none
+
+
+
+  integer, parameter :: minval_degree = -5
+
+  integer, parameter :: num_trials = 5
+
+
+
+  #:for REAL_KIND in REAL_KINDS
+  call ${PROGRAM_NAME}$_${REAL_KIND}$()
+  #:endfor
+
+  print *, 'OK: ${PROGRAM_NAME}$'
+
+
+
+  contains
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = PROGRAM_NAME + '_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$()
+
+    integer :: i_degree, i_x
+
+    real(${REAL_KIND}$) :: x
+
+    type(legendre_polynomial_${REAL_KIND}$_type) :: lp
+
+    type(legendre_polynomial_with_derivative_${REAL_KIND}$_type) :: lp_with_derivative
+
+
+    call initialize_prng
+
+    do i_degree = -1, minval_degree, -1
+
+      call lp                 % set(i_degree)
+      call lp_with_derivative % set(i_degree)
+
+      do i_x = 1, num_trials
+
+        call random_number(x) ! [0, 1)
+
+        x = 2.0_${REAL_KIND}$ * x - 1.0_${REAL_KIND}$ ! [-1, 1)
+
+
+        if ( ieee_is_nan(x) ) then
+          write(error_unit, *) 'x must NOT be NaN.'
+          error stop
+        end if
+
+
+        call lp                 % set(x)
+        call lp_with_derivative % set(x)
+
+        call lp                 % evaluate()
+        call lp_with_derivative % evaluate()
+
+
+        if ( .not. ieee_is_nan( lp%p_n() ) ) then
+
+          write( error_unit, '(A,I2,A,$)' ) 'P_{', i_degree, '}('
+          write( error_unit, *            ) x, ') must be NaN.'
+
+          error stop
+
+        end if
+
+
+        if ( .not. ieee_is_nan( lp_with_derivative%p_n() ) ) then
+
+          write( error_unit, '(A,I2,A,$)' ) 'P_{', i_degree, '}('
+          write( error_unit, *            ) x, ') must be NaN. (@with derivative type)'
+
+          error stop
+
+        end if
+
+
+        if ( .not. ieee_is_nan( lp_with_derivative%dp_n_dx() ) ) then
+
+          write( error_unit, '(A,I2,A,$)' ) 'dP_{', i_degree, '}(x)/dx|_{x='
+          write( error_unit, *            ) x, '} must be NaN.'
+
+          error stop
+
+        end if
+
+      end do 
+
+    end do
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+
+  subroutine initialize_prng
+
+    integer :: i, seed_size
+
+    integer, allocatable :: seed(:)
+
+    call random_seed(size=seed_size)
+
+    allocate( seed(seed_size) )
+
+    do i = 1, seed_size
+      seed(i) = i
+    end do
+
+    call random_seed( put = seed(:) )
+
+  end subroutine
+
+end program ${PROGRAM_NAME}$
