@@ -1,8 +1,60 @@
+#:include '../src/real_kinds.fypp'
 module test_utilities
+
+  #:for REAL_KIND in REAL_KINDS
+  use, intrinsic :: iso_fortran_env, only: ${REAL_KIND}$
+  #:endfor
+
+  use, intrinsic :: ieee_arithmetic, only: operator(.eq.)
+  use, intrinsic :: ieee_arithmetic, only: ieee_class
+  use, intrinsic :: ieee_arithmetic, only: ieee_negative_zero
+  use, intrinsic :: ieee_arithmetic, only: ieee_positive_zero
+
+
 
   implicit none
 
+
+
+  private
+
+  public :: is_zero
+  public :: initialize_prng
+
+
+
+
+  interface is_zero
+  #:for REAL_KIND in REAL_KINDS
+    module procedure :: is_zero_${REAL_KIND}$
+  #:endfor
+  end interface is_zero
+
+
+
   contains
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set FUNCTION_NAME = 'is_zero_' + REAL_KIND
+  logical pure function ${FUNCTION_NAME}$(x)
+
+    real(${REAL_KIND}$), intent(in) :: x
+
+
+    associate( ieee_class_x => ieee_class(x) )
+
+      ${FUNCTION_NAME}$ = &!
+        (ieee_class_x .eq. ieee_positive_zero) .or. &!
+        (ieee_class_x .eq. ieee_negative_zero)
+
+    end associate
+
+  end function ${FUNCTION_NAME}$
+
+  #:endfor
+
 
   subroutine initialize_prng
 
