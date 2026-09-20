@@ -1,0 +1,269 @@
+#:include '../src/real_kinds.fypp'
+#:set PROGRAM_NAME = 'check_unset_x'
+program ${PROGRAM_NAME}$
+
+  use, intrinsic :: iso_fortran_env, only: error_unit
+  #:for REAL_KIND in REAL_KINDS
+  use, intrinsic :: iso_fortran_env, only: ${REAL_KIND}$
+  #:endfor
+
+  use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+  use, intrinsic :: ieee_arithmetic, only: ieee_next_after
+
+  use, non_intrinsic :: legendre_polynomial_recurrence_fortran
+
+
+
+  implicit none
+
+
+
+  integer, parameter, dimension(19) :: list_degree = &!
+    [ &!
+           1,  2,  3,  4,  5,  6,  7,  8,  9, &!
+      10, 11, 22, 33, 44, 55, 66, 77, 88, 99  &!
+    ]
+
+
+  #:for REAL_KIND in REAL_KINDS
+  call ${PROGRAM_NAME}$_${REAL_KIND}$()
+  #:endfor
+
+  print *, 'OK: ${PROGRAM_NAME}$'
+
+
+
+  contains
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = PROGRAM_NAME + '_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$()
+
+    real(${REAL_KIND}$) :: one_next_after, one_next_before
+
+    
+    one_next_before = ieee_next_after(1.0_${REAL_KIND}$, 0.0_${REAL_KIND}$)
+    one_next_after  = ieee_next_after(1.0_${REAL_KIND}$, 2.0_${REAL_KIND}$)
+
+
+    call ${PROGRAM_NAME}$_deg_plus_${REAL_KIND}$( &!
+      one_next_before = one_next_before , &!
+      one_next_after  = one_next_after    &!
+    )
+
+    call ${PROGRAM_NAME}$_deg_zero_${REAL_KIND}$( &!
+      one_next_before  = one_next_before , &!
+      one_next_after   = one_next_after  , &!
+      zero_next_before = ieee_next_after( -0.0_${REAL_KIND}$, -1.0_${REAL_KIND}$ ) , &!
+      zero_next_after  = ieee_next_after(  0.0_${REAL_KIND}$,  1.0_${REAL_KIND}$ )   &!
+    )
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = PROGRAM_NAME + '_deg_plus_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(one_next_before, one_next_after)
+
+    real(${REAL_KIND}$), intent(in) :: one_next_before, one_next_after
+
+
+    integer :: i_degree
+
+    real(${REAL_KIND}$) :: p_n, dp_n_dx
+
+    type(legendre_polynomial_${REAL_KIND}$_type) :: lp
+
+    type(legendre_polynomial_with_derivative_${REAL_KIND}$_type) :: lp_with_derivative
+
+
+    do i_degree = 1, size( list_degree(:) )
+
+      call lp                 % set( list_degree(i_degree) )
+      call lp_with_derivative % set( list_degree(i_degree) )
+
+      ! call lp                 % set(x) ! unset
+      ! call lp_with_derivative % set(x) ! unset
+
+      call lp                 % evaluate()
+      call lp_with_derivative % evaluate()
+
+
+      p_n = lp%p_n()
+
+      if ( .not. ieee_is_nan(p_n) ) then
+
+        write(error_unit, *) 'degree : ', list_degree(i_degree)
+        write(error_unit, *) 'p_n    : ', p_n
+        write(error_unit, *) 'p_n must be NaN.'
+
+        error stop
+
+      end if
+
+
+      p_n = lp_with_derivative%p_n()
+
+      if ( .not. ieee_is_nan(p_n) ) then
+
+        write(error_unit, *) 'degree : ', list_degree(i_degree)
+        write(error_unit, *) 'p_n    : ', p_n
+        write(error_unit, *) 'p_n must be NaN.'
+
+        error stop
+
+      end if
+
+
+      dp_n_dx = lp_with_derivative%dp_n_dx()
+
+      if ( list_degree(i_degree) > 1 ) then
+
+        if ( .not. ieee_is_nan(dp_n_dx) ) then
+
+          write(error_unit, *) 'degree  : ', list_degree(i_degree)
+          write(error_unit, *) 'dp_n_dx : ', dp_n_dx
+          write(error_unit, *) 'dp_n_dx must be NaN.'
+
+          error stop
+
+        end if
+
+      else
+
+        if (dp_n_dx < one_next_before) then
+
+          write(error_unit, *) 'one_next_after  : ', one_next_after
+          write(error_unit, *) 'dp_1_dx         : ', dp_n_dx
+          write(error_unit, *) 'one_next_before : ', one_next_before
+          write(error_unit, *) 'dp_1_dx was less than 1.'
+
+          error stop
+
+        else if (dp_n_dx > one_next_after) then
+
+          write(error_unit, *) 'one_next_after  : ', one_next_after
+          write(error_unit, *) 'dp_1_dx         : ', dp_n_dx
+          write(error_unit, *) 'one_next_before : ', one_next_before
+          write(error_unit, *) 'dp_1_dx was greater than 1.'
+
+          error stop
+
+        end if
+
+      end if
+
+    end do
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = PROGRAM_NAME + '_deg_zero_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$(one_next_before, one_next_after, zero_next_before, zero_next_after)
+
+    real(${REAL_KIND}$), intent(in) :: one_next_before, one_next_after
+
+    real(${REAL_KIND}$), intent(in) :: zero_next_before, zero_next_after
+
+
+    real(${REAL_KIND}$) :: p_0, dp_0_dx
+
+    type(legendre_polynomial_${REAL_KIND}$_type) :: lp
+
+    type(legendre_polynomial_with_derivative_${REAL_KIND}$_type) :: lp_with_derivative
+
+
+    call lp                 % set(0)
+    call lp_with_derivative % set(0)
+
+    ! call lp                 % set(x) ! unset
+    ! call lp_with_derivative % set(x) ! unset
+
+    call lp                 % evaluate()
+    call lp_with_derivative % evaluate()
+
+
+    p_0 = lp%p_n()
+
+    if (p_0 < one_next_before) then
+
+      write(error_unit, *) 'one_next_after  : ', one_next_after
+      write(error_unit, *) 'p_0             : ', p_0
+      write(error_unit, *) 'one_next_before : ', one_next_before
+      write(error_unit, *) 'p_0 was less than 1.'
+
+      error stop
+
+    else if (p_0 > one_next_after) then
+
+      write(error_unit, *) 'one_next_after  : ', one_next_after
+      write(error_unit, *) 'p_0             : ', p_0
+      write(error_unit, *) 'one_next_before : ', one_next_before
+      write(error_unit, *) 'p_0 was greater than 1.'
+
+      error stop
+
+    end if
+
+
+    p_0 = lp_with_derivative%p_n()
+
+    if (p_0 < one_next_before) then
+
+      write(error_unit, *) 'one_next_after  : ', one_next_after
+      write(error_unit, *) 'p_0             : ', p_0
+      write(error_unit, *) 'one_next_before : ', one_next_before
+      write(error_unit, *) 'p_0 was less than 1.'
+
+      error stop
+
+    else if (p_0 > one_next_after) then
+
+      write(error_unit, *) 'one_next_after  : ', one_next_after
+      write(error_unit, *) 'p_0             : ', p_0
+      write(error_unit, *) 'one_next_before : ', one_next_before
+      write(error_unit, *) 'p_0 was greater than 1.'
+
+      error stop
+
+    end if
+
+
+    dp_0_dx = lp_with_derivative%dp_n_dx()
+
+    if (dp_0_dx < zero_next_before) then
+
+      write(error_unit, *) 'zero_next_after  : ', zero_next_after
+      write(error_unit, *) 'dp_0_dx          : ', dp_0_dx
+      write(error_unit, *) 'zero_next_before : ', zero_next_before
+      write(error_unit, *) 'dp_0_dx was less than 0.'
+
+      error stop
+
+    else if (dp_0_dx > zero_next_after) then
+
+      write(error_unit, *) 'zero_next_after  : ', zero_next_after
+      write(error_unit, *) 'dp_0_dx          : ', dp_0_dx
+      write(error_unit, *) 'zero_next_before : ', zero_next_before
+      write(error_unit, *) 'dp_0_dx was greater than 0.'
+
+      error stop
+
+    end if
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+end program ${PROGRAM_NAME}$
