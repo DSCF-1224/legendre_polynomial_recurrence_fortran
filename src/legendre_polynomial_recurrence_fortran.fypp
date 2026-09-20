@@ -44,9 +44,9 @@ module ${MODULE_NAME}$
   #:set TYPE_NAME = 'legendre_recurrence_window_' + REAL_KIND + '_type'
   type :: ${TYPE_NAME}$
 
-    real(${REAL_KIND}$), private :: n_
-    real(${REAL_KIND}$), private :: n_minus_2_
-    real(${REAL_KIND}$), private :: n_minus_1_
+    real(${REAL_KIND}$), private :: n_         = initial_value_${REAL_KIND}$
+    real(${REAL_KIND}$), private :: n_minus_1_ = initial_value_${REAL_KIND}$
+    real(${REAL_KIND}$), private :: n_minus_2_ = initial_value_${REAL_KIND}$
 
     contains
 
