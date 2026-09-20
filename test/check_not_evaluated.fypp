@@ -1,0 +1,119 @@
+#:include '../src/real_kinds.fypp'
+#:set PROGRAM_NAME = 'check_not_evaluated'
+program ${PROGRAM_NAME}$
+
+  use, intrinsic :: iso_fortran_env, only: error_unit
+  #:for REAL_KIND in REAL_KINDS
+  use, intrinsic :: iso_fortran_env, only: ${REAL_KIND}$
+  #:endfor
+
+  use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+
+  use, non_intrinsic :: legendre_polynomial_recurrence_fortran
+
+  use, non_intrinsic :: test_utilities
+
+
+
+  implicit none
+
+
+
+  integer, parameter, dimension(20) :: list_degree = &!
+    [ &!
+       0,  1,  2,  3,  4,  5,  6,  7,  8,  9, &!
+      10, 11, 22, 33, 44, 55, 66, 77, 88, 99  &!
+    ]
+
+  integer, parameter :: num_trials = 5
+
+
+  #:for REAL_KIND in REAL_KINDS
+  call ${PROGRAM_NAME}$_${REAL_KIND}$()
+  #:endfor
+
+  print *, 'OK: ${PROGRAM_NAME}$'
+
+
+
+  contains
+
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set SUBROUTINE_NAME = PROGRAM_NAME + '_' + REAL_KIND
+  subroutine ${SUBROUTINE_NAME}$()
+
+    integer :: i_degree, i_x
+
+    real(${REAL_KIND}$) :: x
+
+    type(legendre_polynomial_${REAL_KIND}$_type) :: lp
+
+    type(legendre_polynomial_with_derivative_${REAL_KIND}$_type) :: lp_with_derivative
+
+
+    call initialize_prng
+
+
+    do i_degree = 1, size( list_degree(:) )
+
+      associate( degree => list_degree(i_degree) )
+
+        call lp                 % set(degree)
+        call lp_with_derivative % set(degree)
+
+        do i_x = 1, num_trials
+
+          call random_number(x) ! [0, 1)
+
+          x = 2.0_${REAL_KIND}$ * x - 1.0_${REAL_KIND}$ ! [-1, 1)
+
+
+          call lp                 % set(x)
+          call lp_with_derivative % set(x)
+
+          ! call lp                 % evaluate() ! NOT evaluated
+          ! call lp_with_derivative % evaluate() ! NOT evaluated
+
+
+          if ( .not. ieee_is_nan( lp%p_n() ) ) then
+
+            write( error_unit, '(A,I0,A,$)' ) 'P_{', degree, '}('
+            write( error_unit, *            ) x, ') must be NaN.'
+
+            error stop
+
+          end if
+
+
+          if ( .not. ieee_is_nan( lp_with_derivative%p_n() ) ) then
+
+            write( error_unit, '(A,I0,A,$)' ) 'P_{', degree, '}('
+            write( error_unit, *            ) x, ') must be NaN. (@with derivative type)'
+
+            error stop
+
+          end if
+
+
+          if ( .not. ieee_is_nan( lp_with_derivative%dp_n_dx() ) ) then
+
+            write( error_unit, '(A,I0,A,$)' ) 'dP_{', degree, '}(x)/dx|_{x='
+            write( error_unit, *            ) x, '} must be NaN.'
+
+            error stop
+
+          end if
+
+        end do
+
+      end associate
+
+    end do
+
+  end subroutine ${SUBROUTINE_NAME}$
+  #:del SUBROUTINE_NAME
+
+  #:endfor
+end program ${PROGRAM_NAME}$
