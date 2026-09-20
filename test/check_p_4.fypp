@@ -11,6 +11,8 @@ program ${PROGRAM_NAME}$
 
   use, non_intrinsic :: legendre_polynomial_recurrence_fortran
 
+  use, non_intrinsic :: test_utilities
+
 
 
   implicit none
@@ -94,24 +96,4 @@ program ${PROGRAM_NAME}$
   #:del SUBROUTINE_NAME
 
   #:endfor
-
-
-  subroutine initialize_prng
-
-    integer :: i, seed_size
-
-    integer, allocatable :: seed(:)
-
-    call random_seed(size=seed_size)
-
-    allocate( seed(seed_size) )
-
-    do i = 1, seed_size
-      seed(i) = i
-    end do
-
-    call random_seed( put = seed(:) )
-
-  end subroutine
-
 end program ${PROGRAM_NAME}$

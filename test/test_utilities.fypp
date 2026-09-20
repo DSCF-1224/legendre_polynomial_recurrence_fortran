@@ -1,0 +1,26 @@
+module test_utilities
+
+  implicit none
+
+  contains
+
+  subroutine initialize_prng
+
+    integer :: i, seed_size
+
+    integer, allocatable :: seed(:)
+
+
+    call random_seed(size=seed_size)
+
+    allocate( seed(seed_size) )
+
+    do i = 1, seed_size
+      seed(i) = i
+    end do
+
+    call random_seed( put = seed(:) )
+
+  end subroutine
+
+end module test_utilities
