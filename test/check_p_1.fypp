@@ -11,7 +11,7 @@ program ${PROGRAM_NAME}$
 
   use, non_intrinsic :: legendre_polynomial_recurrence_fortran
 
-  use, non_intrinsic :: test_utilities
+  use, non_intrinsic :: test_utilities, only: initialize_prng, is_equal
 
 
 
@@ -41,7 +41,7 @@ program ${PROGRAM_NAME}$
 
     integer :: i
 
-    real(${REAL_KIND}$) :: p_1, x, x_next_after, x_next_before
+    real(${REAL_KIND}$) :: p_1, x
 
     type(legendre_polynomial_${REAL_KIND}$_type) :: lp
 
@@ -57,32 +57,19 @@ program ${PROGRAM_NAME}$
 
       x = 2.0_${REAL_KIND}$ * x - 1.0_${REAL_KIND}$ ! [-1, 1)
 
-      x_next_after  = ieee_next_after(x, x + 1.0_${REAL_KIND}$)
-      x_next_before = ieee_next_after(x, x - 1.0_${REAL_KIND}$)
 
       call lp%set(x)
 
       call lp%evaluate()
 
+
       p_1 = lp%p_n()
 
-      if (p_1 < x_next_before) then
+      if ( .not. is_equal(p_1, x) ) then
 
-        write(error_unit, *) 'x                    : ', x
-        write(error_unit, *) 'ieee_next_after  (x) : ', x_next_after
-        write(error_unit, *) 'p_1              (x) : ', p_1
-        write(error_unit, *) 'ieee_next_before (x) : ', x_next_before
-        write(error_unit, *) 'p_1 was less than x.'
-
-        error stop
-
-      else if (p_1 > x_next_after) then
-
-        write(error_unit, *) 'x                    : ', x
-        write(error_unit, *) 'ieee_next_after  (x) : ', x_next_after
-        write(error_unit, *) 'p_1              (x) : ', p_1
-        write(error_unit, *) 'ieee_next_before (x) : ', x_next_before
-        write(error_unit, *) 'p_1 was greater than x.'
+        write(error_unit, *) 'x      : ', x
+        write(error_unit, *) 'p_1(x) : ', p_1
+        write(error_unit, *) 'p_1 must be equal to x.'
 
         error stop
 
