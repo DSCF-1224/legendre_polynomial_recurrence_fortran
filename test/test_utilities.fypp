@@ -72,7 +72,7 @@ module test_utilities
     real(${REAL_KIND}$), intent(in) :: x
 
 
-    ${FUNCTION_NAME}$ = is_zero(x - 1.0_${REAL_KIND}$)
+    ${FUNCTION_NAME}$ = is_equal(x, 1.0_${REAL_KIND}$)
 
   end function ${FUNCTION_NAME}$
 
