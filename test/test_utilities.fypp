@@ -18,11 +18,18 @@ module test_utilities
 
   private
 
+  public :: is_one
   public :: is_zero
   public :: initialize_prng
 
 
 
+
+  interface is_one
+  #:for REAL_KIND in REAL_KINDS
+    module procedure :: is_one_${REAL_KIND}$
+  #:endfor
+  end interface is_one
 
   interface is_zero
   #:for REAL_KIND in REAL_KINDS
@@ -34,6 +41,20 @@ module test_utilities
 
   contains
 
+
+  #:for REAL_KIND in REAL_KINDS
+
+  #:set FUNCTION_NAME = 'is_one_' + REAL_KIND
+  logical pure function ${FUNCTION_NAME}$(x)
+
+    real(${REAL_KIND}$), intent(in) :: x
+
+
+    ${FUNCTION_NAME}$ = x == 1.0_${REAL_KIND}$
+
+  end function ${FUNCTION_NAME}$
+
+  #:endfor
 
   #:for REAL_KIND in REAL_KINDS
 
