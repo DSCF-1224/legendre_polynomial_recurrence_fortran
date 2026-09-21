@@ -7,11 +7,9 @@ program ${PROGRAM_NAME}$
   use, intrinsic :: iso_fortran_env, only: ${REAL_KIND}$
   #:endfor
 
-  use, intrinsic :: ieee_arithmetic, only: ieee_next_after
-
   use, non_intrinsic :: legendre_polynomial_recurrence_fortran
 
-  use, non_intrinsic :: test_utilities
+  use, non_intrinsic :: test_utilities, only: initialize_prng, is_one
 
 
 
@@ -23,12 +21,7 @@ program ${PROGRAM_NAME}$
 
 
   #:for REAL_KIND in REAL_KINDS
-
-  call ${PROGRAM_NAME}$_${REAL_KIND}$( &!
-    one_next_before = ieee_next_after(1.0_${REAL_KIND}$, 0.0_${REAL_KIND}$) , &!
-    one_next_after  = ieee_next_after(1.0_${REAL_KIND}$, 2.0_${REAL_KIND}$)   &!
-  )
-
+  call ${PROGRAM_NAME}$_${REAL_KIND}$()
   #:endfor
 
   print *, 'OK: ${PROGRAM_NAME}$'
@@ -41,10 +34,7 @@ program ${PROGRAM_NAME}$
   #:for REAL_KIND in REAL_KINDS
 
   #:set SUBROUTINE_NAME = PROGRAM_NAME + '_' + REAL_KIND
-  subroutine ${SUBROUTINE_NAME}$(one_next_before, one_next_after)
-
-    real(${REAL_KIND}$), intent(in) :: one_next_before, one_next_after
-
+  subroutine ${SUBROUTINE_NAME}$()
 
     integer :: i
 
@@ -70,23 +60,11 @@ program ${PROGRAM_NAME}$
 
       dp_1_dx = lp%dp_n_dx()
 
-      if (dp_1_dx < one_next_before) then
+      if ( .not. is_one(dp_1_dx) ) then
 
-        write(error_unit, *) 'x                     : ', x
-        write(error_unit, *) 'ieee_next_after  (1)  : ', one_next_after
-        write(error_unit, *) 'dp_1_dx               : ', dp_1_dx
-        write(error_unit, *) 'ieee_next_before (1)  : ', one_next_before
-        write(error_unit, *) 'dp_1_dx was less than 1.'
-
-        error stop
-
-      else if (dp_1_dx > one_next_after) then
-
-        write(error_unit, *) 'x                     : ', x
-        write(error_unit, *) 'ieee_next_after  (1)  : ', one_next_after
-        write(error_unit, *) 'dp_1_dx               : ', dp_1_dx
-        write(error_unit, *) 'ieee_next_before (1)  : ', one_next_before
-        write(error_unit, *) 'dp_1_dx was greater than 1.'
+        write(error_unit, *) 'x       : ', x
+        write(error_unit, *) 'dp_1_dx : ', dp_1_dx
+        write(error_unit, *) 'dp_1_dx must be 1.'
 
         error stop
 
