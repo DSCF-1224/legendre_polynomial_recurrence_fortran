@@ -8,9 +8,10 @@ program ${PROGRAM_NAME}$
   #:endfor
 
   use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
-  use, intrinsic :: ieee_arithmetic, only: ieee_next_after
 
   use, non_intrinsic :: legendre_polynomial_recurrence_fortran
+
+  use, non_intrinsic :: test_utilities, only: initialize_prng, is_one, is_zero
 
 
 
@@ -26,9 +27,10 @@ program ${PROGRAM_NAME}$
 
 
   #:for REAL_KIND in REAL_KINDS
-  call ${PROGRAM_NAME}$_${REAL_KIND}$()
-  #:endfor
+  call ${PROGRAM_NAME}$_deg_plus_${REAL_KIND}$()
+  call ${PROGRAM_NAME}$_deg_zero_${REAL_KIND}$()
 
+  #:endfor
   print *, 'OK: ${PROGRAM_NAME}$'
 
 
@@ -38,41 +40,8 @@ program ${PROGRAM_NAME}$
 
   #:for REAL_KIND in REAL_KINDS
 
-  #:set SUBROUTINE_NAME = PROGRAM_NAME + '_' + REAL_KIND
-  subroutine ${SUBROUTINE_NAME}$()
-
-    real(${REAL_KIND}$) :: one_next_after, one_next_before
-
-    
-    one_next_before = ieee_next_after(1.0_${REAL_KIND}$, 0.0_${REAL_KIND}$)
-    one_next_after  = ieee_next_after(1.0_${REAL_KIND}$, 2.0_${REAL_KIND}$)
-
-
-    call ${PROGRAM_NAME}$_deg_plus_${REAL_KIND}$( &!
-      one_next_before = one_next_before , &!
-      one_next_after  = one_next_after    &!
-    )
-
-    call ${PROGRAM_NAME}$_deg_zero_${REAL_KIND}$( &!
-      one_next_before  = one_next_before , &!
-      one_next_after   = one_next_after  , &!
-      zero_next_before = ieee_next_after( -0.0_${REAL_KIND}$, -1.0_${REAL_KIND}$ ) , &!
-      zero_next_after  = ieee_next_after(  0.0_${REAL_KIND}$,  1.0_${REAL_KIND}$ )   &!
-    )
-
-  end subroutine ${SUBROUTINE_NAME}$
-  #:del SUBROUTINE_NAME
-
-  #:endfor
-
-
-  #:for REAL_KIND in REAL_KINDS
-
   #:set SUBROUTINE_NAME = PROGRAM_NAME + '_deg_plus_' + REAL_KIND
-  subroutine ${SUBROUTINE_NAME}$(one_next_before, one_next_after)
-
-    real(${REAL_KIND}$), intent(in) :: one_next_before, one_next_after
-
+  subroutine ${SUBROUTINE_NAME}$()
 
     integer :: i_degree
 
@@ -137,21 +106,10 @@ program ${PROGRAM_NAME}$
 
       else
 
-        if (dp_n_dx < one_next_before) then
+        if ( .not. is_one(dp_n_dx) ) then
 
-          write(error_unit, *) 'one_next_after  : ', one_next_after
-          write(error_unit, *) 'dp_1_dx         : ', dp_n_dx
-          write(error_unit, *) 'one_next_before : ', one_next_before
+          write(error_unit, *) 'dp_1_dx : ', dp_n_dx
           write(error_unit, *) 'dp_1_dx was less than 1.'
-
-          error stop
-
-        else if (dp_n_dx > one_next_after) then
-
-          write(error_unit, *) 'one_next_after  : ', one_next_after
-          write(error_unit, *) 'dp_1_dx         : ', dp_n_dx
-          write(error_unit, *) 'one_next_before : ', one_next_before
-          write(error_unit, *) 'dp_1_dx was greater than 1.'
 
           error stop
 
@@ -170,12 +128,7 @@ program ${PROGRAM_NAME}$
   #:for REAL_KIND in REAL_KINDS
 
   #:set SUBROUTINE_NAME = PROGRAM_NAME + '_deg_zero_' + REAL_KIND
-  subroutine ${SUBROUTINE_NAME}$(one_next_before, one_next_after, zero_next_before, zero_next_after)
-
-    real(${REAL_KIND}$), intent(in) :: one_next_before, one_next_after
-
-    real(${REAL_KIND}$), intent(in) :: zero_next_before, zero_next_after
-
+  subroutine ${SUBROUTINE_NAME}$()
 
     real(${REAL_KIND}$) :: p_0, dp_0_dx
 
@@ -196,21 +149,10 @@ program ${PROGRAM_NAME}$
 
     p_0 = lp%p_n()
 
-    if (p_0 < one_next_before) then
+    if ( .not. is_one(p_0) ) then
 
-      write(error_unit, *) 'one_next_after  : ', one_next_after
-      write(error_unit, *) 'p_0             : ', p_0
-      write(error_unit, *) 'one_next_before : ', one_next_before
-      write(error_unit, *) 'p_0 was less than 1.'
-
-      error stop
-
-    else if (p_0 > one_next_after) then
-
-      write(error_unit, *) 'one_next_after  : ', one_next_after
-      write(error_unit, *) 'p_0             : ', p_0
-      write(error_unit, *) 'one_next_before : ', one_next_before
-      write(error_unit, *) 'p_0 was greater than 1.'
+      write(error_unit, *) 'p_0 : ', p_0
+      write(error_unit, *) 'p_0 must be 1.'
 
       error stop
 
@@ -219,21 +161,10 @@ program ${PROGRAM_NAME}$
 
     p_0 = lp_with_derivative%p_n()
 
-    if (p_0 < one_next_before) then
+    if ( .not. is_one(p_0) ) then
 
-      write(error_unit, *) 'one_next_after  : ', one_next_after
-      write(error_unit, *) 'p_0             : ', p_0
-      write(error_unit, *) 'one_next_before : ', one_next_before
-      write(error_unit, *) 'p_0 was less than 1.'
-
-      error stop
-
-    else if (p_0 > one_next_after) then
-
-      write(error_unit, *) 'one_next_after  : ', one_next_after
-      write(error_unit, *) 'p_0             : ', p_0
-      write(error_unit, *) 'one_next_before : ', one_next_before
-      write(error_unit, *) 'p_0 was greater than 1.'
+      write(error_unit, *) 'p_0 : ', p_0
+      write(error_unit, *) 'p_0 must be 1.'
 
       error stop
 
@@ -242,21 +173,10 @@ program ${PROGRAM_NAME}$
 
     dp_0_dx = lp_with_derivative%dp_n_dx()
 
-    if (dp_0_dx < zero_next_before) then
+    if ( .not. is_zero(dp_0_dx) ) then
 
-      write(error_unit, *) 'zero_next_after  : ', zero_next_after
-      write(error_unit, *) 'dp_0_dx          : ', dp_0_dx
-      write(error_unit, *) 'zero_next_before : ', zero_next_before
-      write(error_unit, *) 'dp_0_dx was less than 0.'
-
-      error stop
-
-    else if (dp_0_dx > zero_next_after) then
-
-      write(error_unit, *) 'zero_next_after  : ', zero_next_after
-      write(error_unit, *) 'dp_0_dx          : ', dp_0_dx
-      write(error_unit, *) 'zero_next_before : ', zero_next_before
-      write(error_unit, *) 'dp_0_dx was greater than 0.'
+      write(error_unit, *) 'dp_0_dx : ', dp_0_dx
+      write(error_unit, *) 'dp_0_dx must be 0.'
 
       error stop
 
