@@ -19,8 +19,6 @@ program ${PROGRAM_NAME}$
 
 
 
-  integer, parameter :: minval_degree = -5
-
   integer, parameter :: num_trials = 5
 
 
