@@ -7,11 +7,9 @@ program ${PROGRAM_NAME}$
   use, intrinsic :: iso_fortran_env, only: ${REAL_KIND}$
   #:endfor
 
-  use, intrinsic :: ieee_arithmetic, only: ieee_next_after
-
   use, non_intrinsic :: legendre_polynomial_recurrence_fortran
 
-  use, non_intrinsic :: test_utilities
+  use, non_intrinsic :: test_utilities, only: initialize_prng, is_equal
 
 
 
@@ -41,11 +39,7 @@ program ${PROGRAM_NAME}$
 
     integer :: i
 
-    real(${REAL_KIND}$) :: dp_2_dx
-
-    real(${REAL_KIND}$) :: dp_2_dx_ref, dp_2_dx_ref_next_after, dp_2_dx_ref_next_before
-
-    real(${REAL_KIND}$) :: x
+    real(${REAL_KIND}$) :: dp_2_dx, dp_2_dx_ref, x
 
     type(legendre_polynomial_with_derivative_${REAL_KIND}$_type) :: lp
 
@@ -63,32 +57,18 @@ program ${PROGRAM_NAME}$
 
       dp_2_dx_ref = 3.0_${REAL_KIND}$ * x
 
-      dp_2_dx_ref_next_after  = ieee_next_after(dp_2_dx_ref, dp_2_dx_ref + 1.0_${REAL_KIND}$)
-      dp_2_dx_ref_next_before = ieee_next_after(dp_2_dx_ref, dp_2_dx_ref - 1.0_${REAL_KIND}$)
-
       call lp%set(x)
 
       call lp%evaluate()
 
       dp_2_dx = lp%dp_n_dx()
 
-      if (dp_2_dx < dp_2_dx_ref_next_before) then
+      if ( .not. is_equal(dp_2_dx, dp_2_dx_ref) ) then
 
-        write(error_unit, *) 'x                                    : ', x
-        write(error_unit, *) 'ieee_next_after  ( dp_2_dx_ref (x) ) : ', dp_2_dx_ref_next_after
-        write(error_unit, *) '                   dp_2_dx     (x)   : ', dp_2_dx
-        write(error_unit, *) 'ieee_next_before ( dp_2_dx_ref (x) ) : ', dp_2_dx_ref_next_before
-        write(error_unit, *) 'dp_2_dx was less than the reference.'
-
-        error stop
-
-      else if (dp_2_dx > dp_2_dx_ref_next_after) then
-
-        write(error_unit, *) 'x                                    : ', x
-        write(error_unit, *) 'ieee_next_after  ( dp_2_dx_ref (x) ) : ', dp_2_dx_ref_next_after
-        write(error_unit, *) '                   dp_2_dx     (x)   : ', dp_2_dx
-        write(error_unit, *) 'ieee_next_before ( dp_2_dx_ref (x) ) : ', dp_2_dx_ref_next_before
-        write(error_unit, *) 'dp_2_dx was greater than the reference.'
+        write(error_unit, *) '             x  : ', x
+        write(error_unit, *) 'dp_2_dx     (x) : ', dp_2_dx
+        write(error_unit, *) 'dp_2_dx_ref (x) : ', dp_2_dx_ref
+        write(error_unit, *) 'dp_2_dx must be equal to dp_2_dx_ref.'
 
         error stop
 
