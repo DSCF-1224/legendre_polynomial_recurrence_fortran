@@ -15,8 +15,3 @@ library = true
 implicit-typing = false
 implicit-external = false
 source-form = "free"
-[features]
-strict.gfortran.flags = "-g -Wall -Wextra -Werror -fPIC -fmax-errors=1 -fbounds-check -fcheck=array-temps -fbacktrace -fcoarray=single -fimplicit-none -ffree-form"
-
-[profiles]
-strict = ["strict"]
